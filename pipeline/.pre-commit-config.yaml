@@ -1,0 +1,46 @@
+default_language_version:
+  python: python3.12
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  # Ruff linting and formatting (latest version)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.5
+    hooks:
+      # Run the linter with auto-fix (before formatting)
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      # Run the formatter (after linting)
+      - id: ruff-format
+
+  # Typos checker (latest version)
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.24.6
+    hooks:
+      - id: typos
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [
+          types-requests,
+          types-PyYAML,
+          pydantic,
+          httpx,
+          prefect,
+        ]
+        args: [--ignore-missing-imports]

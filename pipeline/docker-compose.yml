@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for Prefect
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: prefect
+      POSTGRES_PASSWORD: prefect
+      POSTGRES_DB: prefect
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prefect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Prefect server
+  prefect-server:
+    image: prefecthq/prefect:3-latest
+    command: prefect server start --host 0.0.0.0
+    environment:
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://prefect:prefect@postgres:5432/prefect
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+      PREFECT_API_URL: http://localhost:4200/api
+    ports:
+      - "4200:4200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - prefect_data:/root/.prefect
+
+  # Prefect worker (for running flows)
+  prefect-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: prefect worker start --pool default-pool --type process
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      MOCK_EXTERNAL_APIS: "true"
+    depends_on:
+      - prefect-server
+    volumes:
+      - .:/app
+      - /tmp:/tmp
+
+volumes:
+  postgres_data:
+  prefect_data:

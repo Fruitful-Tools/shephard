@@ -1,0 +1,30 @@
+[default]
+# Extend the default configuration
+extend-glob = ["*.{py,pyi,md,rst,txt,yaml,yml,toml}"]
+
+[default.extend-words]
+# Add project-specific words that aren't typos
+shepard = "shepard"
+prefect = "prefect"
+pyenv = "pyenv"
+pydantic = "pydantic"
+supabase = "supabase"
+httpx = "httpx"
+llm = "llm"
+llms = "llms"
+
+[files]
+# Exclude specific files/patterns
+extend-exclude = [
+    "*.lock",
+    "*.min.js",
+    "*.min.css",
+    "node_modules/",
+    ".venv/",
+    "__pycache__/",
+    "*.pyc",
+    ".git/",
+    "uv.lock",
+    "dist/",
+    "build/",
+]

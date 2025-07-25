@@ -1,0 +1,46 @@
+# Shepard Pipeline
+
+> A Prefect-powered AI transcription and summarization system that transforms YouTube videos, audio files, and text content into structured insights through configurable AI workflows.
+
+## Core Architecture
+
+The pipeline supports three entry points: YouTube videos (download → extract audio → transcribe → summarize), audio file uploads (chunk → transcribe → correct → summarize), and text transcripts (direct summarization). Built with Python 3.12, Prefect 3.0+ for orchestration, and Pydantic for type safety.
+
+Key components:
+- **Modular Prefect Tasks**: Each processing step (download, transcription, correction, summarization) is an independent, retryable task
+- **Runtime Configuration**: Model selection, chunk sizes, and AI instructions configurable per job
+- **Mock-First Development**: All external APIs (YouTube, Voxtral, OpenAI, Supabase) mocked for local development
+- **Type-Safe Workflows**: Full type validation with comprehensive Pydantic schemas
+
+## Project Files
+
+- [shepard_pipeline/flows/main_flows.py](shepard_pipeline/flows/main_flows.py): Core Prefect flow definitions for all three entry points
+- [shepard_pipeline/models/pipeline.py](shepard_pipeline/models/pipeline.py): Pydantic data models for inputs, outputs, and processing results
+- [shepard_pipeline/services/mock_apis.py](shepard_pipeline/services/mock_apis.py): Mock implementations of all external AI services
+- [shepard_pipeline/tasks/](shepard_pipeline/tasks/): Individual Prefect tasks for audio processing, transcription, and summarization
+- [shepard_pipeline/config/settings.py](shepard_pipeline/config/settings.py): Environment-based configuration management
+- [shepard_pipeline/cli/main.py](shepard_pipeline/cli/main.py): Command-line interface with rich terminal output
+- [shepard_pipeline/demo.py](shepard_pipeline/demo.py): Interactive demonstration of all pipeline capabilities
+
+## Development Setup
+
+- [pyproject.toml](pyproject.toml): Modern Python project configuration with uv dependency management
+- [docker-compose.yml](docker-compose.yml): Local development infrastructure (Prefect server, PostgreSQL, worker)
+- [.env.example](.env.example): Environment configuration template with mock service settings
+- [.pre-commit-config.yaml](.pre-commit-config.yaml): Automated code quality hooks with Ruff, mypy, and typos
+
+## Documentation
+
+- [llm-docs/project-spec.md](llm-docs/project-spec.md): Architectural blueprint and deployment strategy
+- [llm-docs/local-dev.md](llm-docs/local-dev.md): Comprehensive development environment setup with pyenv and uv
+- [llm-docs/code-quality.md](llm-docs/code-quality.md): Modern Python tooling standards and pre-commit workflow
+
+## Tests
+
+- [tests/integration/test_flows.py](tests/integration/test_flows.py): End-to-end pipeline testing with Prefect test harness
+- [tests/unit/](tests/unit/): Unit tests for models, services, and individual components
+- [tests/conftest.py](tests/conftest.py): Pytest fixtures and mock service setup
+
+## Optional
+
+Pipeline uses mock services by default for development. Real AI integrations include Voxtral for transcription, Mistral for text correction, OpenAI GPT-4 for summarization, and Supabase for job tracking. The system supports runtime model selection and custom AI instructions per processing job.
