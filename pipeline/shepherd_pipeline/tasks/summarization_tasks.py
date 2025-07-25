@@ -2,28 +2,35 @@
 
 from prefect import task
 
-from ..config.settings import settings
 from ..models.pipeline import SummaryResult
-from ..services.mock_apis import MockOpenAIService
+from ..services.model_factory import ModelFactory
 
 
-@task(retries=2, retry_delay_seconds=10)
+@task(
+    retries=3,
+    retry_delay_seconds=[4, 8, 16],  # exponential backoff
+    retry_jitter_factor=0.1,
+)
 async def summarize_text(
     text: str,
     instructions: str | None = None,
     word_limit: int | None = None,
-    model: str = "gpt-4",
+    model: str = "mistral-small-latest",
 ) -> SummaryResult:
-    """Generate summary from the merged text."""
+    """Generate summary from the merged text using Mistral API."""
 
-    if settings.is_development:
-        openai_service = MockOpenAIService()
-        return await openai_service.summarize_text(
-            _text=text, instructions=instructions, word_limit=word_limit, model=model
+    # Use model factory to create appropriate service
+    summarizer = ModelFactory.create_summarization_service(model=model)
+
+    # All services now use consistent interface
+    result = await summarizer.summarize_text(
+        text=text, instructions=instructions, word_limit=word_limit, model=model
+    )
+    if result.failure_reason:
+        raise RuntimeError(
+            f"Summarization failed for {text[:100]}: {result.failure_reason}"
         )
-    else:
-        # TODO: Implement real OpenAI API call
-        raise NotImplementedError("Production summarization not implemented")
+    return result
 
 
 @task

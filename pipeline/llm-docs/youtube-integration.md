@@ -4,7 +4,7 @@ This document details the implementation of real YouTube video download function
 
 ## Overview
 
-The Shepard Pipeline now supports downloading YouTube videos with precise time range control, using yt-dlp for production downloads while maintaining mock API compatibility for development.
+The Shepherd Pipeline now supports downloading YouTube videos with precise time range control, using yt-dlp for production downloads while maintaining mock API compatibility for development.
 
 ## Architecture
 
@@ -25,16 +25,22 @@ The Shepard Pipeline now supports downloading YouTube videos with precise time r
 ### Configuration System
 
 #### Runtime API Toggle
-The system supports switching between mock and real APIs via the `MOCK_EXTERNAL_APIS` environment variable:
+The system supports switching between mock and real APIs via CLI flags and configuration:
 
 **Mock Mode (Development)**:
-```env
-MOCK_EXTERNAL_APIS=true
+```bash
+# CLI flag
+--mock
+
+# Configuration
+settings.is_development = True
 ```
 
 **Production Mode**:
-```env
-MOCK_EXTERNAL_APIS=false
+```bash
+# Default behavior (no flag needed)
+# Real APIs used based on configuration
+settings.is_development = False
 ```
 
 #### YouTube-Specific Settings
@@ -151,7 +157,7 @@ audio_metadata = await download_youtube_audio(
 
 ### Basic Usage
 ```python
-from shepard_pipeline.flows.main_flows import run_youtube_pipeline
+from shepherd_pipeline.flows.main_flows import run_youtube_pipeline
 
 # Download entire video
 result = await run_youtube_pipeline(
@@ -168,22 +174,28 @@ result = await run_youtube_pipeline(
 )
 ```
 
-### Interactive Demo
-The enhanced `demo.py` provides comprehensive testing:
+### Command Line Interface
+The enhanced CLI provides comprehensive functionality:
 
 ```bash
-# Interactive mode with API toggle
-uv run python -m shepard_pipeline.demo
+# Process YouTube video with time range
+uv run python -m shepherd_pipeline.cli youtube \
+  "https://www.youtube.com/watch?v=example" \
+  --start 30 --end 90 \
+  --export-transcript "transcript.txt" \
+  --export-summary "summary.txt"
 
-# Automated testing mode
-uv run python -m shepard_pipeline.demo --auto
+# Use mock mode for testing
+uv run python -m shepherd_pipeline.cli youtube \
+  "https://www.youtube.com/watch?v=example" \
+  --mock
 ```
 
-#### Demo Features
-- **API Mode Toggle**: Switch between mock and real APIs at runtime
-- **URL Selection**: Choose from predefined URLs or enter custom ones
-- **Time Range Configuration**: Interactive setup of start/end times
-- **Detailed Results**: Shows chunk information, processing times, and errors
+#### CLI Features
+- **Time Range Selection**: Specify exact start/end times with --start and --end
+- **Export Capabilities**: Save transcripts and summaries to files
+- **Model Selection**: Choose AI models for each processing stage
+- **Mock Mode**: Test without external API calls using --mock
 
 ## Testing Strategy
 

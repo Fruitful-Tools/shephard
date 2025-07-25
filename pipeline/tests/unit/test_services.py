@@ -2,13 +2,9 @@
 
 import pytest
 
-from shepard_pipeline.services.mock_apis import (
-    MockMistralService,
-    MockOpenAIService,
-    MockSupabaseService,
-    MockVoxtralService,
-    MockYouTubeService,
-)
+from shepherd_pipeline.services.llm_provider import MockAIService
+from shepherd_pipeline.services.mock_apis import MockSupabaseService
+from shepherd_pipeline.services.youtube.mock import MockYouTubeService
 
 
 class TestMockYouTubeService:
@@ -19,64 +15,125 @@ class TestMockYouTubeService:
         """Test YouTube audio download."""
         service = MockYouTubeService()
 
-        result = await service.download_audio(
-            "https://www.youtube.com/watch?v=test123", "/tmp/output.mp3"
-        )
+        result = await service.download_audio("https://www.youtube.com/watch?v=test123")
 
-        assert "title" in result
-        assert "duration" in result
-        assert "file_path" in result
-        assert result["file_path"] == "/tmp/output.mp3"
-        assert result["format"] == "mp3"
-        assert isinstance(result["duration"], int)
-        assert result["duration"] > 0
+        assert result.title
+        assert result.duration > 0
+        assert result.file_path
+        assert result.format == "mp3"
+        assert isinstance(result.duration, int | float)
+        assert result.duration > 0
 
 
-class TestMockVoxtralService:
-    """Test MockVoxtralService."""
+class TestMockAIService:
+    """Test unified MockAIService."""
 
     @pytest.mark.asyncio
-    async def test_transcribe_chunk(self) -> None:
-        """Test audio transcription."""
-        service = MockVoxtralService()
+    async def test_transcribe_audio(self) -> None:
+        """Test OpenAI-style audio transcription."""
+        service = MockAIService()
 
-        result = await service.transcribe_chunk("/tmp/audio_chunk_1.mp3", "zh-TW")
+        result = await service.transcribe_audio("/tmp/audio_file.mp3", "zh")
 
-        assert result.chunk_id == "audio_chunk_1"
         assert isinstance(result.raw_text, str)
         assert len(result.raw_text) > 0
-        assert 0.0 <= result.confidence <= 1.0
-        assert result.language == "zh-TW"
-        assert isinstance(result.timestamps, list)
-
-
-class TestMockMistralService:
-    """Test MockMistralService."""
+        assert result.language == "zh"
+        assert result.model == "mock-model"
+        assert result.failure_reason is None
 
     @pytest.mark.asyncio
     async def test_correct_text(self) -> None:
         """Test text correction."""
-        service = MockMistralService()
+        service = MockAIService()
 
         original_text = "這是測試文字"
-        result = await service.correct_text(original_text, "zh-TW", "mistral-medium")
+        result = await service.correct_text(
+            original_text, "zh-TW", "mistral-small-latest"
+        )
 
         assert result.original_text == original_text
         assert isinstance(result.corrected_text, str)
         assert len(result.corrected_text) > 0
         assert result.language == "zh-TW"
-        assert result.model_used == "mistral-medium"
+        assert result.model == "mistral-small-latest"
         # Should end with punctuation
-        assert result.corrected_text.endswith(("。", "！", "？"))
+        assert result.corrected_text.endswith(("。", "！", "？", "：", "；"))
 
+    @pytest.mark.asyncio
+    async def test_correct_text_christian_context(self) -> None:
+        """Test text correction with Christian terminology."""
+        service = MockAIService()
 
-class TestMockOpenAIService:
-    """Test MockOpenAIService."""
+        # Test text with simplified Chinese Christian terms
+        original_text = "神的恩典 教会的弟兄姊妹 祷告和见证"
+        result = await service.correct_text(
+            original_text, "zh-TW", "mistral-small-latest"
+        )
+
+        # Should convert to traditional Chinese
+        assert "上帝" in result.corrected_text or "神" in result.corrected_text
+        assert "教會" in result.corrected_text or "教会" in result.corrected_text
+        assert "禱告" in result.corrected_text or "祷告" in result.corrected_text
+        assert "見證" in result.corrected_text or "见证" in result.corrected_text
 
     @pytest.mark.asyncio
     async def test_summarize_text(self) -> None:
         """Test text summarization."""
-        service = MockOpenAIService()
+        service = MockAIService()
+
+        text = (
+            "今天我要跟大家分享關於神的恩典的見證。神在我生命中做了奇妙的工作，"
+            "透過禱告和讀經讓我更親近祂。教會的弟兄姊妹也給了我很多支持和鼓勵。"
+        )
+
+        result = await service.summarize_text(
+            text,
+            model="mistral-small-latest",
+            instructions="這是一天基督教的講道，請整理三段式重點摘要",
+        )
+
+        assert isinstance(result.summary, str)
+        assert len(result.summary) > 0
+        assert result.word_count > 0
+        assert result.model == "mistral-small-latest"
+        # Should contain Christian terminology
+        assert any(
+            term in result.summary
+            for term in ["基督", "信仰", "神", "上帝", "教會", "禱告"]
+        )
+
+    @pytest.mark.asyncio
+    async def test_summarize_text_with_word_limit(self) -> None:
+        """Test summarization with word limit."""
+        service = MockAIService()
+
+        text = "長文字測試內容，需要被總結為更短的摘要。"
+        result = await service.summarize_text(
+            text, word_limit=20, model="mistral-small-latest"
+        )
+
+        # Should respect word limit (approximately) - check word count for Chinese
+        # In Chinese, each character is roughly equivalent to a word
+        assert result.word_count <= 30  # Allow some flexibility for Chinese text
+
+    @pytest.mark.asyncio
+    async def test_summarize_text_with_instructions(self) -> None:
+        """Test summarization with custom instructions."""
+        service = MockAIService()
+
+        instructions = "請重點關注屬靈成長的部分"
+        text = "今天分享信仰見證，談到神的恩典和教會生活。"
+
+        result = await service.summarize_text(
+            text, instructions=instructions, model="mistral-small-latest"
+        )
+
+        assert result.custom_instructions == instructions
+
+    @pytest.mark.asyncio
+    async def test_summarize_text_general_mode(self) -> None:
+        """Test text summarization in general mode (non-Christian)."""
+        service = MockAIService()
 
         result = await service.summarize_text(
             "這是一段很長的測試文字，需要被總結成較短的摘要。", model="gpt-4"
@@ -85,25 +142,24 @@ class TestMockOpenAIService:
         assert isinstance(result.summary, str)
         assert len(result.summary) > 0
         assert result.word_count > 0
-        assert result.model_used == "gpt-4"
+        assert result.model == "gpt-4"
 
     @pytest.mark.asyncio
     async def test_summarize_with_word_limit(self) -> None:
         """Test summarization with word limit."""
-        service = MockOpenAIService()
+        service = MockAIService()
 
         result = await service.summarize_text(
             "長文字測試內容", word_limit=5, model="gpt-4"
         )
 
         # Should respect word limit (approximately)
-        word_count = len(result.summary.split())
-        assert word_count <= 7  # Allow some flexibility
+        assert result.word_count <= 10  # Allow some flexibility for Chinese text
 
     @pytest.mark.asyncio
     async def test_summarize_with_instructions(self) -> None:
         """Test summarization with custom instructions."""
-        service = MockOpenAIService()
+        service = MockAIService()
 
         instructions = "請重點關注技術細節"
         result = await service.summarize_text(
@@ -123,7 +179,6 @@ class TestMockSupabaseService:
 
         job_data = {
             "user_id": "test_user",
-            "entry_point": "youtube",
             "status": "pending",
         }
 

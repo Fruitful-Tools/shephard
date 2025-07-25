@@ -1,60 +1,40 @@
-# Shepard Pipeline
+# Shepherd Pipeline
 
-A Prefect-powered AI transcription and summarization system that transforms audio and video content into structured insights through configurable AI workflows.
+A Prefect-powered AI transcription and summarization system focused on YouTube video processing with multi-provider AI support, Chinese language processing, and production-ready workflows.
 
-## AI-Enabled Architecture
+## Current Implementation
 
-**Intelligent Processing Chain**: YouTube videos and audio files flow through an AI-powered pipeline:
-1. **Content Ingestion** → Automated download and audio extraction
-2. **Speech-to-Text** → AI transcription with language detection
-3. **Content Enhancement** → AI-powered text correction and translation
-4. **Summarization** → Configurable AI summarization with custom instructions
+**YouTube Video Pipeline (Production Ready)**:
+1. **Video Download** → yt-dlp with precise time range extraction
+2. **Audio Processing** → Chunking and format conversion
+3. **AI Transcription** → Multi-provider support (Voxtral, OpenAI)
+4. **Chinese Translation** → Traditional Chinese conversion with OpenCC
+5. **AI Text Correction** → Context-aware correction for Christian content
+6. **AI Summarization** → Configurable summarization with custom instructions
 
-**Adaptive AI Integration**: Runtime model selection for transcription (Voxtral) and summarization (OpenAI GPT-4), with flexible prompt engineering and parameter tuning per job.
-
-## Features
-
-- **Modular AI Pipeline**: Each AI processing step is an independent Prefect task with configurable models
-- **Mock-First Development**: All AI services (transcription, summarization) mocked for rapid local development
-- **Runtime AI Configuration**: Dynamic model selection, prompt customization, and parameter tuning
-- **Type-Safe AI Workflows**: Full type validation for AI inputs/outputs with Pydantic schemas
+**Key Features**:
+- **Multi-Provider AI**: Runtime model selection across OpenAI and Mistral providers
+- **Chinese Language Processing**: Specialized Traditional Chinese (Taiwan) processing
+- **Artifact Caching**: Intelligent caching with content deduplication and pipeline resumption
+- **Mock-First Development**: Comprehensive mock APIs for local development
+- **Type-Safe Workflows**: Full type validation with Pydantic schemas
+- **Professional CLI**: Rich command-line interface with export capabilities
 
 ## Quick Start
 
 ### Prerequisites
 
-1. **Install pyenv for Python version management:**
-   ```bash
-   # macOS
-   brew install pyenv
+**Python 3.12** and **uv** package manager are required. For detailed installation instructions, see [Python Environment Setup](llm-docs/python-env.md).
 
-   # Linux/Unix
-   curl -fsSL https://pyenv.run | bash
-   ```
+**Quick Install**:
+```bash
+# Install pyenv and Python 3.12
+brew install pyenv  # macOS
+pyenv install 3.12 && pyenv local 3.12
 
-2. **Configure your shell (add to ~/.bashrc, ~/.zshrc, etc.):**
-   ```bash
-   export PYENV_ROOT="$HOME/.pyenv"
-   [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-   eval "$(pyenv init -)"
-   ```
-
-3. **Restart your shell:**
-   ```bash
-   exec "$SHELL"
-   ```
-
-4. **Install and set Python version:**
-   ```bash
-   pyenv install 3.12
-   pyenv local 3.12
-   ```
-
-5. **Install uv:**
-   ```bash
-   # Install via pipx or pip
-   pip install uv
-   ```
+# Install uv
+pip install uv
+```
 
 ### Setup and Run
 
@@ -64,21 +44,34 @@ uv sync
 
 # Set up pre-commit hooks
 uv run pre-commit install
+uv run pre-commit install --hook-type commit-msg
 
 # Copy environment file
 cp .env.example .env
 
-# Start Prefect server
-uv run prefect server start
+# Start Prefect server (optional - demo works without it)
+docker compose up -d
 
-# Run demo pipeline
-uv run python -m shepard_pipeline.demo
+# Run CLI commands
+uv run python -m shepherd_pipeline.cli --help
+
+# Process YouTube video with time range
+uv run python -m shepherd_pipeline.cli youtube \
+  "https://www.youtube.com/watch?v=3TeBv1lXLHA" \
+  --start 1650 --end 4760 \
+  --export-transcript exports/transcript-{timestamp}.txt \
+  --export-summary exports/summary-{timestamp}.txt
+
+# Use mock mode for testing
+uv run python -m shepherd_pipeline.cli youtube \
+  "https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  --mock
 ```
 
 ## Project Structure
 
 ```
-shepard_pipeline/
+shepherd_pipeline/
 ├── flows/           # Prefect flow definitions
 ├── tasks/           # Individual Prefect tasks
 ├── models/          # Pydantic models and schemas
@@ -89,4 +82,10 @@ shepard_pipeline/
 
 ## Development
 
-See [local-dev.md](../llm-docs/local-dev.md) for detailed development setup.
+**Documentation Structure**:
+- **[Python Environment Setup](llm-docs/python-env.md)** - pyenv and uv installation
+- **[Local Development Setup](llm-docs/local-dev.md)** - Docker infrastructure and project configuration
+- **[CLI Usage Guide](llm-docs/cli-usage.md)** - Command-line interface documentation
+- **[Code Quality Guide](llm-docs/code-quality.md)** - Development tools and workflows
+
+For complete development documentation, see [llm-docs/](llm-docs/) directory or refer to [llms.txt](llms.txt) for structured project overview.

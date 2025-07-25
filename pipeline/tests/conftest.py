@@ -10,9 +10,8 @@ from prefect.testing.utilities import prefect_test_harness
 from pydantic import HttpUrl
 import pytest
 
-from shepard_pipeline.models.pipeline import (
+from shepherd_pipeline.models.pipeline import (
     CorrectionResult,
-    EntryPointType,
     PipelineInput,
     SummaryResult,
     TranscriptionResult,
@@ -43,7 +42,6 @@ def temp_audio_file() -> Generator[str, None, None]:
 def sample_youtube_input() -> PipelineInput:
     """Sample YouTube pipeline input."""
     return PipelineInput(
-        entry_point=EntryPointType.YOUTUBE,
         youtube_url=HttpUrl("https://www.youtube.com/watch?v=test123"),
         user_id="test_user",
         chunk_size_minutes=5,
@@ -54,41 +52,12 @@ def sample_youtube_input() -> PipelineInput:
 
 
 @pytest.fixture
-def sample_audio_input(temp_audio_file: str) -> PipelineInput:
-    """Sample audio file pipeline input."""
-    return PipelineInput(
-        entry_point=EntryPointType.AUDIO_FILE,
-        audio_file_path=temp_audio_file,
-        user_id="test_user",
-        chunk_size_minutes=10,
-        target_language="zh-TW",
-    )
-
-
-@pytest.fixture
-def sample_text_input() -> PipelineInput:
-    """Sample text pipeline input."""
-    return PipelineInput(
-        entry_point=EntryPointType.TEXT,
-        text_content="這是一段測試文字，用來測試文字摘要功能。",
-        user_id="test_user",
-        target_language="zh-TW",
-        summary_word_limit=50,
-    )
-
-
-@pytest.fixture
 def mock_transcription_result() -> TranscriptionResult:
     """Mock transcription result."""
     return TranscriptionResult(
-        chunk_id="test_chunk_1",
         raw_text="這是測試轉錄文字",
-        confidence=0.95,
         language="zh-TW",
-        timestamps=[
-            {"start": 0.0, "end": 2.0, "text": "這是"},
-            {"start": 2.0, "end": 4.0, "text": "測試轉錄文字"},
-        ],
+        model="voxtral-v1",
     )
 
 
@@ -96,11 +65,10 @@ def mock_transcription_result() -> TranscriptionResult:
 def mock_correction_result() -> CorrectionResult:
     """Mock correction result."""
     return CorrectionResult(
-        chunk_id="test_chunk_1",
         original_text="這是測試轉錄文字",
         corrected_text="這是測試轉錄文字。",
         language="zh-TW",
-        model_used="mistral-medium",
+        model="mistral-medium",
     )
 
 
@@ -110,7 +78,7 @@ def mock_summary_result() -> SummaryResult:
     return SummaryResult(
         summary="這是一個測試摘要，總結了輸入文字的主要內容。",
         word_count=25,
-        model_used="gpt-4",
+        model="gpt-4",
         custom_instructions="Test instructions",
     )
 
@@ -127,14 +95,6 @@ def mock_youtube_service() -> AsyncMock:
         "sample_rate": 44100,
         "file_size": 1024000,
     }
-    return service
-
-
-@pytest.fixture
-def mock_voxtral_service(mock_transcription_result: TranscriptionResult) -> AsyncMock:
-    """Mock Voxtral transcription service."""
-    service = AsyncMock()
-    service.transcribe_chunk.return_value = mock_transcription_result
     return service
 
 

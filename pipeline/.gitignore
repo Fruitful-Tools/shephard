@@ -80,3 +80,7 @@ temp/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Artifacts and output
+pipeline_artifacts/
+exports/

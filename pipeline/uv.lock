@@ -1010,6 +1010,15 @@ wheels = [
 ]
 
 [[package]]
+name = "opencc-python-reimplemented"
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/6d/c6f37eed651dd6b752e50f80a93396cdaa42a6acc6ce05ad7452303ea511/opencc-python-reimplemented-0.1.7.tar.gz", hash = "sha256:4f777ea3461a25257a7b876112cfa90bb6acabc6dfb843bf4d11266e43579dee", size = 482566 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/30/6b/055b7806f320cc8f2cdf23c5f70221c0dc1683fca9ffaf76dfc2ad4b91b6/opencc_python_reimplemented-0.1.7-py2.py3-none-any.whl", hash = "sha256:41b3b92943c7bed291f448e9c7fad4b577c8c2eae30fcfe5a74edf8818493aa6", size = 481813 },
+]
+
+[[package]]
 name = "opentelemetry-api"
 version = "1.35.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1883,19 +1892,21 @@ wheels = [
 ]
 
 [[package]]
-name = "shepard-pipeline"
+name = "shepherd-pipeline"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
     { name = "loguru" },
     { name = "moviepy" },
+    { name = "opencc-python-reimplemented" },
     { name = "prefect" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pydub" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
+    { name = "requests" },
     { name = "rich" },
     { name = "supabase" },
     { name = "typer" },
@@ -1913,6 +1924,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-mock" },
     { name = "ruff" },
+    { name = "types-requests" },
     { name = "typos" },
 ]
 
@@ -1921,12 +1933,14 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "loguru", specifier = ">=0.7.0" },
     { name = "moviepy", specifier = ">=1.0.3" },
+    { name = "opencc-python-reimplemented", specifier = ">=0.1.7" },
     { name = "prefect", specifier = ">=3.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "python-multipart", specifier = ">=0.0.6" },
+    { name = "requests", specifier = ">=2.31.0" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "supabase", specifier = ">=2.0.0" },
     { name = "typer", specifier = ">=0.9.0" },
@@ -1944,6 +1958,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.21.0" },
     { name = "pytest-mock", specifier = ">=3.11.0" },
     { name = "ruff", specifier = ">=0.7.0" },
+    { name = "types-requests", specifier = ">=2.32.4.20250611" },
     { name = "typos", specifier = ">=1.16.0" },
 ]
 
@@ -2126,6 +2141,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c5/8c/7d682431efca5fd290017663ea4588bf6f2c6aad085c7f108c5dbc316e70/typer-0.16.0.tar.gz", hash = "sha256:af377ffaee1dbe37ae9440cb4e8f11686ea5ce4e9bae01b84ae7c63b87f1dd3b", size = 102625 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/42/3efaf858001d2c2913de7f354563e3a3a2f0decae3efe98427125a8f441e/typer-0.16.0-py3-none-any.whl", hash = "sha256:1f79bed11d4d02d4310e3c1b7ba594183bcedb0ac73b27a9e5f28f6fb5b98855", size = 46317 },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.4.20250611"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/7f/73b3a04a53b0fd2a911d4ec517940ecd6600630b559e4505cc7b68beb5a0/types_requests-2.32.4.20250611.tar.gz", hash = "sha256:741c8777ed6425830bf51e54d6abe245f79b4dcb9019f1622b773463946bf826", size = 23118 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/ea/0be9258c5a4fa1ba2300111aa5a0767ee6d18eb3fd20e91616c12082284d/types_requests-2.32.4.20250611-py3-none-any.whl", hash = "sha256:ad2fe5d3b0cb3c2c902c8815a70e7fb2302c4b8c1f77bdcd738192cdb3878072", size = 20643 },
 ]
 
 [[package]]

@@ -1,28 +1,38 @@
-# Shepard Pipeline
+# Shepherd Pipeline
 
-> A Prefect-powered AI transcription and summarization system that transforms YouTube videos, audio files, and text content into structured insights through configurable AI workflows. **This llms.txt file is the preferred entry point for understanding the project structure.**
+> A Prefect-powered AI transcription and summarization system focused on YouTube video processing with multi-provider AI support, Chinese language processing, and production-ready workflows. **This llms.txt file is the preferred entry point for understanding the project structure.**
 
 ## Core Architecture
 
-The pipeline supports three entry points: YouTube videos (yt-dlp download with time ranges → extract audio → transcribe → summarize), audio file uploads (chunk → transcribe → correct → summarize), and text transcripts (direct summarization). Built with Python 3.12, Prefect 3.0+ for orchestration, and Pydantic for type safety.
+**Current Implementation**: YouTube video pipeline (production-ready) featuring yt-dlp download with time ranges → audio extraction → chunking → transcription → Chinese translation → AI correction → summarization. Built with Python 3.12, Prefect 3.0+ for orchestration, and comprehensive Pydantic data models for type safety.
+
+**Planned Extensions**: Audio file upload pipeline and direct text summarization (architecture defined, implementation pending).
 
 Key components:
 - **Modular Prefect Tasks**: Each processing step (download, transcription, correction, summarization) is an independent, retryable task
-- **Runtime Configuration**: Model selection, chunk sizes, time ranges, and AI instructions configurable per job
-- **Mock-First Development**: All external APIs (YouTube, Voxtral, OpenAI, Supabase) mocked for local development with seamless production toggle
-- **YouTube Integration**: Real yt-dlp implementation with precise time range extraction and production-grade audio processing
-- **Type-Safe Workflows**: Full type validation with comprehensive Pydantic schemas
+- **Runtime Configuration**: Model selection, chunk sizes, time ranges, and AI instructions configurable per job through CLI and `PipelineInput`
+- **Mock-First Development**: Comprehensive mock implementations for all external APIs enabling full development without API dependencies
+- **Multi-Provider AI Support**: ModelFactory pattern enabling runtime switching between OpenAI (`gpt-4o-mini`, `gpt-4o`) and Mistral (`mistral-small-latest`, `mistral-medium-2505`, `voxtral-mini-latest`) models
+- **Chinese Language Processing**: Specialized Traditional Chinese (Taiwan) conversion with OpenCC integration and Christian content optimization
+- **YouTube Integration**: Production yt-dlp implementation with precise time range extraction (`youtube_start_time`, `youtube_end_time`) and high-quality audio processing
+- **Type-Safe Workflows**: Full type validation with comprehensive Pydantic schemas and mypy static checking
+- **Artifact Management**: Intelligent caching system with SHA-256 content deduplication, automatic cleanup, and pipeline resumption capabilities
 
 ## Project Files
 
-- [shepard_pipeline/flows/main_flows.py](shepard_pipeline/flows/main_flows.py): Core Prefect flow definitions for all three entry points
-- [shepard_pipeline/models/pipeline.py](shepard_pipeline/models/pipeline.py): Pydantic data models for inputs, outputs, and processing results
-- [shepard_pipeline/services/mock_apis.py](shepard_pipeline/services/mock_apis.py): Mock implementations of all external AI services
-- [shepard_pipeline/services/youtube_service.py](shepard_pipeline/services/youtube_service.py): Real YouTube download service using yt-dlp with time range support
-- [shepard_pipeline/tasks/](shepard_pipeline/tasks/): Individual Prefect tasks for audio processing, transcription, and summarization
-- [shepard_pipeline/config/settings.py](shepard_pipeline/config/settings.py): Environment-based configuration management
-- [shepard_pipeline/cli/main.py](shepard_pipeline/cli/main.py): Command-line interface with rich terminal output
-- [shepard_pipeline/demo.py](shepard_pipeline/demo.py): Interactive demonstration of all pipeline capabilities
+- [shepherd_pipeline/flows/main_flows.py](shepherd_pipeline/flows/main_flows.py): YouTube pipeline flow implementation with comprehensive error handling and artifact management
+- [shepherd_pipeline/models/pipeline.py](shepherd_pipeline/models/pipeline.py): Pydantic data models for inputs, outputs, and processing results
+- [shepherd_pipeline/services/mock_apis.py](shepherd_pipeline/services/mock_apis.py): Mock implementations of all external AI services
+- [shepherd_pipeline/services/model_factory.py](shepherd_pipeline/services/model_factory.py): Factory pattern for dynamic AI service instantiation based on model selection
+- [shepherd_pipeline/services/mistral_service.py](shepherd_pipeline/services/mistral_service.py): Real Mistral API integration for text correction and summarization
+- [shepherd_pipeline/services/openai_service.py](shepherd_pipeline/services/openai_service.py): Real OpenAI API integration for premium text processing
+- [shepherd_pipeline/services/voxtral_service.py](shepherd_pipeline/services/voxtral_service.py): Real Voxtral API integration for audio transcription (uses Mistral API key)
+- [shepherd_pipeline/services/translation_service.py](shepherd_pipeline/services/translation_service.py): Chinese text conversion using OpenCC for Traditional Chinese processing
+- [shepherd_pipeline/services/youtube_service.py](shepherd_pipeline/services/youtube_service.py): Real YouTube download service using yt-dlp with time range support
+- [shepherd_pipeline/tasks/](shepherd_pipeline/tasks/): Individual atomic Prefect tasks for audio processing, transcription, correction, and summarization with comprehensive retry logic
+- [shepherd_pipeline/config/settings.py](shepherd_pipeline/config/settings.py): Environment-based configuration management
+- [shepherd_pipeline/cli/main.py](shepherd_pipeline/cli/main.py): Command-line interface with rich terminal output and comprehensive pipeline functionality
+- [shepherd_pipeline/utils/artifact_manager.py](shepherd_pipeline/utils/artifact_manager.py): Comprehensive artifact caching and deduplication system
 
 ## Development Setup
 
@@ -33,11 +43,22 @@ Key components:
 
 ## Documentation
 
-- [llm-docs/project-spec.md](llm-docs/project-spec.md): Architectural blueprint and deployment strategy
-- [llm-docs/local-dev.md](llm-docs/local-dev.md): Comprehensive development environment setup with pyenv and uv
+### Setup & Development
+- [llm-docs/python-env.md](llm-docs/python-env.md): Python environment setup with pyenv and uv package management
+- [llm-docs/local-dev.md](llm-docs/local-dev.md): Docker infrastructure setup and project configuration
 - [llm-docs/code-quality.md](llm-docs/code-quality.md): Modern Python tooling standards and pre-commit workflow
-- [llm-docs/logging.md](llm-docs/logging.md): Hybrid logging approach combining Prefect's get_run_logger with Loguru
+- [llm-docs/cli-usage.md](llm-docs/cli-usage.md): Command-line interface usage guide for YouTube video processing
+
+### Architecture & Integration
+- [llm-docs/project-spec.md](llm-docs/project-spec.md): Architectural blueprint and current implementation status
+- [llm-docs/model-configuration.md](llm-docs/model-configuration.md): Multi-provider AI model selection and configuration patterns
+- [llm-docs/real-api-integration.md](llm-docs/real-api-integration.md): Production API integration for Voxtral, Mistral, and OpenAI services
 - [llm-docs/youtube-integration.md](llm-docs/youtube-integration.md): Complete YouTube download implementation with yt-dlp and time range extraction
+
+### Specialized Features
+- [llm-docs/chinese-translation.md](llm-docs/chinese-translation.md): OpenCC-based Chinese text conversion and Traditional Chinese processing
+- [llm-docs/artifact-system.md](llm-docs/artifact-system.md): Artifact caching, deduplication, and pipeline resumption capabilities
+- [llm-docs/logging.md](llm-docs/logging.md): Hybrid logging approach combining Prefect's get_run_logger with Loguru
 
 ## Tests
 
@@ -51,12 +72,12 @@ Key components:
 
 **Documentation Cycle**: When making changes, update or create documentation in llm-docs/ as needed, then update entries in this llms.txt file to complete the development cycle and maintain accurate project overview.
 
-## Optional
+## Production Features
 
-Pipeline uses mock services by default for development. Real integrations include:
-- **YouTube Downloads**: yt-dlp with time range extraction (`youtube_start_time`, `youtube_end_time`)
-- **AI Services**: Voxtral for transcription, Mistral for text correction, OpenAI GPT-4 for summarization
-- **Data Storage**: Supabase for job tracking
-- **Interactive Demo**: Enhanced demo.py with API mode toggle and comprehensive testing capabilities
+**YouTube Processing Pipeline**: Production-ready implementation with yt-dlp download supporting precise time range extraction, pydub audio chunking, multi-provider AI transcription (Voxtral), Traditional Chinese translation with OpenCC, AI-powered text correction, and configurable summarization.
 
-The system supports runtime model selection, custom AI instructions per job, and seamless switching between mock and production APIs via `MOCK_EXTERNAL_APIS` environment variable.
+**Multi-Provider AI Integration**: Runtime model selection across OpenAI (`gpt-4o-mini`, `gpt-4o`, `gpt-4`, `gpt-3.5-turbo`) and Mistral (`mistral-small-latest`, `mistral-medium-2505`, `mistral-large`, `voxtral-mini-latest`) with ModelFactory abstraction and comprehensive error handling with fallbacks.
+
+**Professional CLI**: Rich command-line interface supporting model selection, time range specification, export capabilities with timestamp placeholders, mock mode for development, and comprehensive parameter validation.
+
+**Development Infrastructure**: Mock-first development with realistic mock APIs, Docker Compose infrastructure with Prefect server and PostgreSQL, comprehensive testing suite with integration and unit tests, and modern Python tooling (uv, mypy, ruff, pytest).

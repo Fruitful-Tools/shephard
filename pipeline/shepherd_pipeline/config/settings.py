@@ -20,11 +20,9 @@ class Settings(BaseSettings):
 
     # External API Keys (mocked by default)
     openai_api_key: str = Field(default="mock_openai_key")
-    voxtral_api_key: str = Field(default="mock_voxtral_key")
     mistral_api_key: str = Field(default="mock_mistral_key")
 
     # Pipeline Configuration
-    mock_external_apis: bool = Field(default=True)
     chunk_size_minutes: int = Field(default=10, ge=1, le=30)
     default_language: str = Field(default="zh-TW")
     max_audio_duration_hours: int = Field(default=3, ge=1, le=24)
@@ -41,14 +39,34 @@ class Settings(BaseSettings):
     )
 
     # Model Configuration
-    transcription_model: str = Field(default="voxtral-v1")
-    correction_model: str = Field(default="mistral-medium")
-    summarization_model: str = Field(default="gpt-4")
+    transcription_model: str = Field(default="voxtral-mini-latest")
+    correction_model: str = Field(default="mistral-small-latest")
+    summarization_model: str = Field(default="mistral-small-latest")
 
-    @property
-    def is_development(self) -> bool:
-        """Check if running in development mode."""
-        return self.mock_external_apis
+    # Supported model categories
+    supported_correction_models: list[str] = Field(
+        default=[
+            "mistral-small-latest",
+            "mistral-medium",
+            "mistral-medium-2505",
+            "gpt-4o-mini",
+            "gpt-4o",
+            "gpt-4",
+            "gpt-3.5-turbo",
+        ]
+    )
+    supported_summarization_models: list[str] = Field(
+        default=[
+            "mistral-small-latest",
+            "mistral-medium",
+            "mistral-medium-2505",
+            "voxtral-mini-latest",
+            "gpt-4o-mini",
+            "gpt-4o",
+            "gpt-4",
+            "gpt-3.5-turbo",
+        ]
+    )
 
 
 # Global settings instance

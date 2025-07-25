@@ -2,10 +2,9 @@
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, HttpUrl, model_validator
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class JobStatus(str, Enum):
@@ -39,21 +38,20 @@ class AudioChunk(BaseModel):
 class TranscriptionResult(BaseModel):
     """Transcription result for a single chunk."""
 
-    chunk_id: str
-    raw_text: str
-    confidence: float = Field(ge=0.0, le=1.0)
     language: str
-    timestamps: list[dict[str, Any]] = Field(default_factory=list)
+    model: str
+    raw_text: str
+    failure_reason: str | None = None
 
 
 class CorrectionResult(BaseModel):
     """Text correction/translation result."""
 
-    chunk_id: str
     original_text: str
     corrected_text: str
     language: str
-    model_used: str
+    model: str
+    failure_reason: str | None = None
 
 
 class SummaryResult(BaseModel):
@@ -61,14 +59,13 @@ class SummaryResult(BaseModel):
 
     summary: str
     word_count: int
-    model_used: str
+    model: str
     custom_instructions: str | None = None
+    failure_reason: str | None = None
 
 
 class PipelineInput(BaseModel):
     """Input parameters for pipeline execution."""
-
-    entry_point: EntryPointType
 
     # Source data (one of these will be provided)
     youtube_url: HttpUrl | None = None
@@ -100,34 +97,13 @@ class PipelineInput(BaseModel):
     user_id: str | None = None
     job_id: UUID | None = Field(default_factory=uuid4)
 
-    @model_validator(mode="after")
-    def validate_entry_point_data(self) -> "PipelineInput":
-        """Validate that appropriate data is provided for entry point."""
-        if self.entry_point == EntryPointType.YOUTUBE and not self.youtube_url:
-            raise ValueError("youtube_url is required for YOUTUBE entry point")
-        elif self.entry_point == EntryPointType.AUDIO_FILE and not self.audio_file_path:
-            raise ValueError("audio_file_path is required for AUDIO_FILE entry point")
-        elif self.entry_point == EntryPointType.TEXT and not self.text_content:
-            raise ValueError("text_content is required for TEXT entry point")
-
-        # Validate YouTube time parameters
-        if (
-            self.youtube_start_time is not None
-            and self.youtube_end_time is not None
-            and self.youtube_end_time <= self.youtube_start_time
-        ):
-            raise ValueError("youtube_end_time must be greater than youtube_start_time")
-
-        return self
-
 
 class PipelineResult(BaseModel):
     """Complete pipeline execution result."""
 
-    job_id: UUID
+    job_id: UUID | None = None
     user_id: str | None = None
     status: JobStatus
-    entry_point: EntryPointType
 
     # Processing results
     audio_chunks: list[AudioChunk] = Field(default_factory=list)

@@ -1,16 +1,17 @@
 """Audio processing tasks."""
 
 from pathlib import Path
-from typing import Any
 from uuid import uuid4
 
-from prefect import task
+from prefect import get_run_logger, task
 from pydantic import HttpUrl
 
-from ..config.settings import settings
+from shepherd_pipeline.services.youtube.schema import AudioResult
+
 from ..models.pipeline import AudioChunk
-from ..services.mock_apis import MockYouTubeService
-from ..services.youtube_service import YouTubeService
+from ..services.youtube.mock import MockYouTubeService
+from ..services.youtube.service import YouTubeService
+from ..utils.artifact_manager import ArtifactManager
 
 # Import pydub for production audio processing
 try:
@@ -22,64 +23,62 @@ except ImportError:
     PYDUB_AVAILABLE = False
 
 
-@task(retries=2, retry_delay_seconds=5)
+@task(
+    retries=3,
+    retry_delay_seconds=[4, 8, 16],  # exponential backoff
+    retry_jitter_factor=0.1,
+)
 async def download_youtube_audio(
     youtube_url: HttpUrl,
-    output_dir: str,
     start_time: float | None = None,
     end_time: float | None = None,
-) -> dict[str, Any]:
+    use_mock: bool = False,
+) -> AudioResult:
     """Download audio from YouTube URL with optional time range."""
-    # Create output path
-    output_path = Path(output_dir) / f"youtube_audio_{uuid4()}.mp3"
+    logger = get_run_logger()
+    artifact_manager = ArtifactManager()
+    audio_key = artifact_manager.get_artifact_key(
+        url=str(youtube_url), start=start_time, end=end_time
+    )
 
-    if settings.mock_external_apis:
+    # Check for existing download
+    audio_result = artifact_manager.get_audio(audio_key)
+    if audio_result:
+        logger.info("Found existing download")
+        return audio_result
+
+    audio_folder = artifact_manager.audio_folder(audio_key)
+    audio_folder.mkdir(parents=True, exist_ok=True)
+
+    # Create output path in artifacts directory
+    youtube_service: YouTubeService | MockYouTubeService = YouTubeService(
+        root_dir=str(audio_folder)
+    )
+    if use_mock:
         # Use mock service
-        mock_service = MockYouTubeService()
-        result = await mock_service.download_audio(
-            str(youtube_url), str(output_path), start_time, end_time
-        )
+        youtube_service = MockYouTubeService(root_dir=str(audio_folder))
+        artifact_manager.audio_folder(audio_key).mkdir(parents=True, exist_ok=True)
 
-        # Create a mock audio file for chunking
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.touch()
-
-        return result
-    else:
-        # Use real YouTube service
-        real_service = YouTubeService(temp_dir=output_dir)
-        return await real_service.download_audio(
-            str(youtube_url), str(output_path), start_time, end_time
-        )
-
-
-@task
-async def validate_audio_file(file_path: str) -> dict[str, Any]:
-    """Validate audio file and extract metadata."""
-    file_path_obj = Path(file_path)
-    if not file_path_obj.exists():
-        raise FileNotFoundError(f"Audio file not found: {file_path}")
-
-    # Mock audio metadata
-    file_size = file_path_obj.stat().st_size if file_path_obj.exists() else 1024000
-
-    return {
-        "file_path": file_path,
-        "duration": 1800,  # 30 minutes mock
-        "format": "mp3",
-        "sample_rate": 44100,
-        "file_size": file_size,
-        "channels": 2,
-    }
+    result = await youtube_service.download_audio(
+        str(youtube_url), start_time, end_time
+    )
+    artifact_manager.save_audio(audio_key, result)
+    logger.info(f"Downloaded and saved audio to artifacts: {result.file_path}")
+    return result
 
 
 @task
 async def chunk_audio(
-    audio_file_path: str, chunk_size_minutes: int = 10
+    audio_result: AudioResult, chunk_size_minutes: int = 10, use_mock: bool = False
 ) -> list[AudioChunk]:
     """Split audio file into chunks for processing."""
+    logger = get_run_logger()
 
-    if settings.mock_external_apis:
+    artifact_manager = ArtifactManager()
+    chunks_dir = artifact_manager.chunk_folder(audio_result, chunk_size_minutes)
+    chunks_dir.mkdir(parents=True, exist_ok=True)
+
+    if use_mock:
         # Create mock chunks
         total_duration = 1800  # 30 minutes
         chunk_duration = chunk_size_minutes * 60
@@ -90,8 +89,7 @@ async def chunk_audio(
 
         while current_time < total_duration:
             end_time = min(current_time + chunk_duration, total_duration)
-
-            chunk_path = f"{audio_file_path}_chunk_{chunk_idx}.mp3"
+            chunk_path = str(chunks_dir / f"chunk_{uuid4()}_{chunk_idx}.mp3")
 
             # Create mock chunk file
             Path(chunk_path).touch()
@@ -109,6 +107,7 @@ async def chunk_audio(
             current_time = end_time
             chunk_idx += 1
 
+        logger.info(f"Created {len(chunks)} mock chunks")
         return chunks
 
     else:
@@ -116,12 +115,11 @@ async def chunk_audio(
         if not PYDUB_AVAILABLE:
             raise ImportError("pydub is required for production audio chunking")
 
-        audio_path = Path(audio_file_path)
-        if not audio_path.exists():
-            raise FileNotFoundError(f"Audio file not found: {audio_file_path}")
+        if not Path(audio_result.file_path).exists():
+            raise FileNotFoundError(f"Audio file not found: {audio_result.file_path}")
 
         # Load audio file
-        audio = AudioSegment.from_file(str(audio_path))
+        audio = AudioSegment.from_file(str(audio_result.file_path))
 
         # Convert chunk size from minutes to milliseconds
         chunk_duration_ms = chunk_size_minutes * 60 * 1000
@@ -130,14 +128,16 @@ async def chunk_audio(
         pydub_chunks = make_chunks(audio, chunk_duration_ms)
 
         chunks = []
+        current_time = 0.0
         for i, chunk in enumerate(pydub_chunks):
-            # Calculate timing
-            start_time = i * chunk_size_minutes * 60
+            # Calculate timing based on actual accumulated duration
+            start_time = current_time
             duration_seconds = len(chunk) / 1000.0  # pydub uses milliseconds
             end_time = start_time + duration_seconds
+            current_time = end_time
 
-            # Create chunk file path
-            chunk_path = f"{audio_file_path}_chunk_{i}.mp3"
+            # Create chunk file path in artifacts directory
+            chunk_path = str(chunks_dir / f"chunk_{uuid4()}_{i}.mp3")
 
             # Export chunk to file
             chunk.export(chunk_path, format="mp3")
@@ -152,16 +152,5 @@ async def chunk_audio(
                 )
             )
 
+        logger.info(f"Created {len(chunks)} chunks")
         return chunks
-
-
-@task
-async def cleanup_temp_files(file_paths: list[str]) -> None:
-    """Clean up temporary audio files."""
-    for file_path in file_paths:
-        try:
-            file_path_obj = Path(file_path)
-            if file_path_obj.exists():
-                file_path_obj.unlink()
-        except Exception as e:
-            print(f"Warning: Could not remove {file_path}: {e}")

@@ -1,6 +1,6 @@
 # Logging Guidelines
 
-This document outlines logging standards and best practices for the Shepard Pipeline project using a **hybrid approach** combining Prefect's native logging with [Loguru](https://loguru.readthedocs.io/).
+This document outlines logging standards and best practices for the Shepherd Pipeline project using a **hybrid approach** combining Prefect's native logging with [Loguru](https://loguru.readthedocs.io/).
 
 ## Overview
 
@@ -70,7 +70,7 @@ class YouTubeService:
 For components that may run both inside and outside Prefect contexts, use the HybridLogger:
 
 ```python
-from shepard_pipeline.utils.logging import get_hybrid_logger
+from shepherd_pipeline.utils.logging import get_hybrid_logger
 
 class ProcessingService:
     def __init__(self) -> None:
@@ -386,9 +386,9 @@ from loguru import logger
 @pytest.fixture
 def disable_logging():
     """Disable logging for tests."""
-    logger.disable("shepard_pipeline")
+    logger.disable("shepherd_pipeline")
     yield
-    logger.enable("shepard_pipeline")
+    logger.enable("shepherd_pipeline")
 ```
 
 ## Troubleshooting
@@ -408,5 +408,5 @@ Enable trace-level logging for detailed debugging:
 from loguru import logger
 
 # Temporary trace logging
-logger.add(sys.stderr, level="TRACE", filter="shepard_pipeline")
+logger.add(sys.stderr, level="TRACE", filter="shepherd_pipeline")
 ```
