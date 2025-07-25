@@ -1,6 +1,6 @@
 """Main pipeline flows for different entry points."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 import tempfile
 from typing import Any
 from uuid import uuid4
@@ -39,7 +39,7 @@ async def youtube_pipeline_flow(pipeline_input: PipelineInput) -> PipelineResult
         user_id=pipeline_input.user_id,
         status=JobStatus.RUNNING,
         entry_point=EntryPointType.YOUTUBE,
-        started_at=datetime.utcnow(),
+        started_at=datetime.now(UTC),
         input_params=pipeline_input,
     )
 
@@ -51,7 +51,10 @@ async def youtube_pipeline_flow(pipeline_input: PipelineInput) -> PipelineResult
             # Step 1: Download YouTube audio
             logger.info("Downloading YouTube audio...")
             audio_metadata = await download_youtube_audio(  # type: ignore[misc]
-                pipeline_input.youtube_url, temp_dir
+                pipeline_input.youtube_url,
+                temp_dir,
+                pipeline_input.youtube_start_time,
+                pipeline_input.youtube_end_time,
             )
             temp_files.append(audio_metadata["file_path"])
 
@@ -109,7 +112,7 @@ async def youtube_pipeline_flow(pipeline_input: PipelineInput) -> PipelineResult
 
             result.summary = summary
             result.status = JobStatus.COMPLETED
-            result.completed_at = datetime.utcnow()
+            result.completed_at = datetime.now(UTC)
 
             # Calculate credits consumed (mock calculation)
             audio_duration_hours = audio_metadata["duration"] / 3600
@@ -123,7 +126,7 @@ async def youtube_pipeline_flow(pipeline_input: PipelineInput) -> PipelineResult
         logger.error(f"Pipeline failed: {str(e)}")
         result.status = JobStatus.FAILED
         result.error_message = str(e)
-        result.completed_at = datetime.utcnow()
+        result.completed_at = datetime.now(UTC)
 
     finally:
         # Cleanup temporary files
@@ -144,7 +147,7 @@ async def audio_file_pipeline_flow(pipeline_input: PipelineInput) -> PipelineRes
         user_id=pipeline_input.user_id,
         status=JobStatus.RUNNING,
         entry_point=EntryPointType.AUDIO_FILE,
-        started_at=datetime.utcnow(),
+        started_at=datetime.now(UTC),
         input_params=pipeline_input,
     )
 
@@ -205,7 +208,7 @@ async def audio_file_pipeline_flow(pipeline_input: PipelineInput) -> PipelineRes
 
         result.summary = summary
         result.status = JobStatus.COMPLETED
-        result.completed_at = datetime.utcnow()
+        result.completed_at = datetime.now(UTC)
 
         # Calculate credits
         audio_duration_hours = audio_metadata["duration"] / 3600
@@ -217,7 +220,7 @@ async def audio_file_pipeline_flow(pipeline_input: PipelineInput) -> PipelineRes
         logger.error(f"Pipeline failed: {str(e)}")
         result.status = JobStatus.FAILED
         result.error_message = str(e)
-        result.completed_at = datetime.utcnow()
+        result.completed_at = datetime.now(UTC)
 
     finally:
         # Cleanup temporary files
@@ -238,7 +241,7 @@ async def text_summary_pipeline_flow(pipeline_input: PipelineInput) -> PipelineR
         user_id=pipeline_input.user_id,
         status=JobStatus.RUNNING,
         entry_point=EntryPointType.TEXT,
-        started_at=datetime.utcnow(),
+        started_at=datetime.now(UTC),
         input_params=pipeline_input,
     )
 
@@ -259,7 +262,7 @@ async def text_summary_pipeline_flow(pipeline_input: PipelineInput) -> PipelineR
 
         result.summary = summary
         result.status = JobStatus.COMPLETED
-        result.completed_at = datetime.utcnow()
+        result.completed_at = datetime.now(UTC)
 
         # Text processing consumes 1 credit regardless of length
         result.credits_consumed = 1
@@ -272,7 +275,7 @@ async def text_summary_pipeline_flow(pipeline_input: PipelineInput) -> PipelineR
         logger.error(f"Pipeline failed: {str(e)}")
         result.status = JobStatus.FAILED
         result.error_message = str(e)
-        result.completed_at = datetime.utcnow()
+        result.completed_at = datetime.now(UTC)
 
     return result
 

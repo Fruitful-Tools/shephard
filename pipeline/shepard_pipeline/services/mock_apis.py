@@ -12,20 +12,63 @@ from ..models.pipeline import CorrectionResult, SummaryResult, TranscriptionResu
 class MockYouTubeService:
     """Mock YouTube download service."""
 
-    async def download_audio(self, _url: str, output_path: str) -> dict[str, Any]:
-        """Mock YouTube audio download."""
+    async def download_audio(
+        self,
+        _url: str,
+        output_path: str,
+        start_time: float | None = None,
+        end_time: float | None = None,
+    ) -> dict[str, Any]:
+        """Mock YouTube audio download with optional time range."""
         await asyncio.sleep(2)  # Simulate download time
 
         # Mock video metadata
+        original_duration = random.randint(300, 10800)  # 5 min to 3 hours
+
+        # Calculate actual duration based on time range
+        actual_duration: float = float(original_duration)
+        if start_time is not None and end_time is not None:
+            actual_duration = end_time - start_time
+        elif start_time is not None:
+            actual_duration = float(original_duration) - start_time
+        elif end_time is not None:
+            actual_duration = min(end_time, float(original_duration))
+
+        return {
+            "title": f"Sample Video {random.randint(1000, 9999)}",
+            "duration": actual_duration,
+            "file_path": output_path,
+            "format": "mp3",
+            "sample_rate": 44100,
+            "file_size": int(
+                actual_duration * 128 * 1024 // 8
+            ),  # Rough estimate for 128kbps
+            "uploader": "Mock Channel",
+            "upload_date": "20240101",
+            "view_count": random.randint(1000, 1000000),
+            "original_duration": original_duration,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+
+    async def get_video_info(self, _url: str) -> dict[str, Any]:
+        """Mock video information without downloading."""
+        await asyncio.sleep(0.5)  # Simulate info extraction time
+
         duration = random.randint(300, 10800)  # 5 min to 3 hours
 
         return {
             "title": f"Sample Video {random.randint(1000, 9999)}",
             "duration": duration,
-            "file_path": output_path,
-            "format": "mp3",
-            "sample_rate": 44100,
-            "file_size": duration * 128 * 1024 // 8,  # Rough estimate for 128kbps
+            "uploader": "Mock Channel",
+            "upload_date": "20240101",
+            "view_count": random.randint(1000, 1000000),
+            "description": "This is a mock video description for testing purposes.",
+            "thumbnail": "https://example.com/thumbnail.jpg",
+            "formats": [
+                {"format_id": "140", "ext": "m4a", "quality": "medium"},
+                {"format_id": "251", "ext": "webm", "quality": "medium"},
+            ],
         }
 
 

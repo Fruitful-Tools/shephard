@@ -149,12 +149,16 @@ class TestPipelineResult:
         result.status = JobStatus.FAILED
         assert result.is_complete is True
 
+        # Cancelled job
+        result.status = JobStatus.CANCELLED
+        assert result.is_complete is True
+
         # Running job
         result.status = JobStatus.RUNNING
         assert result.is_complete is False
 
         # Pending job
-        result.status = JobStatus.PENDING
+        result.status = JobStatus.PENDING  # type: ignore[unreachable]
         assert result.is_complete is False
 
     def test_duration_minutes_property(self) -> None:

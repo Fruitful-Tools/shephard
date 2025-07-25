@@ -29,6 +29,17 @@ class Settings(BaseSettings):
     default_language: str = Field(default="zh-TW")
     max_audio_duration_hours: int = Field(default=3, ge=1, le=24)
 
+    # YouTube Service Configuration
+    youtube_audio_quality: str = Field(
+        default="192K", description="Audio quality for YouTube downloads"
+    )
+    youtube_audio_format: str = Field(
+        default="mp3", description="Audio format for YouTube downloads"
+    )
+    youtube_max_duration_hours: int = Field(
+        default=6, ge=1, le=12, description="Maximum duration for YouTube videos"
+    )
+
     # Model Configuration
     transcription_model: str = Field(default="voxtral-v1")
     correction_model: str = Field(default="mistral-medium")

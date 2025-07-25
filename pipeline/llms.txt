@@ -4,12 +4,13 @@
 
 ## Core Architecture
 
-The pipeline supports three entry points: YouTube videos (download → extract audio → transcribe → summarize), audio file uploads (chunk → transcribe → correct → summarize), and text transcripts (direct summarization). Built with Python 3.12, Prefect 3.0+ for orchestration, and Pydantic for type safety.
+The pipeline supports three entry points: YouTube videos (yt-dlp download with time ranges → extract audio → transcribe → summarize), audio file uploads (chunk → transcribe → correct → summarize), and text transcripts (direct summarization). Built with Python 3.12, Prefect 3.0+ for orchestration, and Pydantic for type safety.
 
 Key components:
 - **Modular Prefect Tasks**: Each processing step (download, transcription, correction, summarization) is an independent, retryable task
-- **Runtime Configuration**: Model selection, chunk sizes, and AI instructions configurable per job
-- **Mock-First Development**: All external APIs (YouTube, Voxtral, OpenAI, Supabase) mocked for local development
+- **Runtime Configuration**: Model selection, chunk sizes, time ranges, and AI instructions configurable per job
+- **Mock-First Development**: All external APIs (YouTube, Voxtral, OpenAI, Supabase) mocked for local development with seamless production toggle
+- **YouTube Integration**: Real yt-dlp implementation with precise time range extraction and production-grade audio processing
 - **Type-Safe Workflows**: Full type validation with comprehensive Pydantic schemas
 
 ## Project Files
@@ -17,6 +18,7 @@ Key components:
 - [shepard_pipeline/flows/main_flows.py](shepard_pipeline/flows/main_flows.py): Core Prefect flow definitions for all three entry points
 - [shepard_pipeline/models/pipeline.py](shepard_pipeline/models/pipeline.py): Pydantic data models for inputs, outputs, and processing results
 - [shepard_pipeline/services/mock_apis.py](shepard_pipeline/services/mock_apis.py): Mock implementations of all external AI services
+- [shepard_pipeline/services/youtube_service.py](shepard_pipeline/services/youtube_service.py): Real YouTube download service using yt-dlp with time range support
 - [shepard_pipeline/tasks/](shepard_pipeline/tasks/): Individual Prefect tasks for audio processing, transcription, and summarization
 - [shepard_pipeline/config/settings.py](shepard_pipeline/config/settings.py): Environment-based configuration management
 - [shepard_pipeline/cli/main.py](shepard_pipeline/cli/main.py): Command-line interface with rich terminal output
@@ -34,6 +36,8 @@ Key components:
 - [llm-docs/project-spec.md](llm-docs/project-spec.md): Architectural blueprint and deployment strategy
 - [llm-docs/local-dev.md](llm-docs/local-dev.md): Comprehensive development environment setup with pyenv and uv
 - [llm-docs/code-quality.md](llm-docs/code-quality.md): Modern Python tooling standards and pre-commit workflow
+- [llm-docs/logging.md](llm-docs/logging.md): Hybrid logging approach combining Prefect's get_run_logger with Loguru
+- [llm-docs/youtube-integration.md](llm-docs/youtube-integration.md): Complete YouTube download implementation with yt-dlp and time range extraction
 
 ## Tests
 
@@ -49,4 +53,10 @@ Key components:
 
 ## Optional
 
-Pipeline uses mock services by default for development. Real AI integrations include Voxtral for transcription, Mistral for text correction, OpenAI GPT-4 for summarization, and Supabase for job tracking. The system supports runtime model selection and custom AI instructions per processing job.
+Pipeline uses mock services by default for development. Real integrations include:
+- **YouTube Downloads**: yt-dlp with time range extraction (`youtube_start_time`, `youtube_end_time`)
+- **AI Services**: Voxtral for transcription, Mistral for text correction, OpenAI GPT-4 for summarization
+- **Data Storage**: Supabase for job tracking
+- **Interactive Demo**: Enhanced demo.py with API mode toggle and comprehensive testing capabilities
+
+The system supports runtime model selection, custom AI instructions per job, and seamless switching between mock and production APIs via `MOCK_EXTERNAL_APIS` environment variable.

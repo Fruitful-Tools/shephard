@@ -1,6 +1,6 @@
 """Pipeline data models and schemas."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
@@ -75,6 +75,14 @@ class PipelineInput(BaseModel):
     audio_file_path: str | None = None
     text_content: str | None = None
 
+    # YouTube-specific parameters
+    youtube_start_time: float | None = Field(
+        default=None, ge=0, description="Start time in seconds for YouTube videos"
+    )
+    youtube_end_time: float | None = Field(
+        default=None, ge=0, description="End time in seconds for YouTube videos"
+    )
+
     # Processing parameters
     chunk_size_minutes: int = Field(default=10, ge=1, le=30)
     target_language: str = Field(default="zh-TW")
@@ -102,6 +110,14 @@ class PipelineInput(BaseModel):
         elif self.entry_point == EntryPointType.TEXT and not self.text_content:
             raise ValueError("text_content is required for TEXT entry point")
 
+        # Validate YouTube time parameters
+        if (
+            self.youtube_start_time is not None
+            and self.youtube_end_time is not None
+            and self.youtube_end_time <= self.youtube_start_time
+        ):
+            raise ValueError("youtube_end_time must be greater than youtube_start_time")
+
         return self
 
 
@@ -120,7 +136,7 @@ class PipelineResult(BaseModel):
     summary: SummaryResult | None = None
 
     # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     started_at: datetime | None = None
     completed_at: datetime | None = None
     error_message: str | None = None
