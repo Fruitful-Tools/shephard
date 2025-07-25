@@ -1,6 +1,6 @@
 # Shepard Pipeline
 
-> A Prefect-powered AI transcription and summarization system that transforms YouTube videos, audio files, and text content into structured insights through configurable AI workflows.
+> A Prefect-powered AI transcription and summarization system that transforms YouTube videos, audio files, and text content into structured insights through configurable AI workflows. **This llms.txt file is the preferred entry point for understanding the project structure.**
 
 ## Core Architecture
 
@@ -40,6 +40,12 @@ Key components:
 - [tests/integration/test_flows.py](tests/integration/test_flows.py): End-to-end pipeline testing with Prefect test harness
 - [tests/unit/](tests/unit/): Unit tests for models, services, and individual components
 - [tests/conftest.py](tests/conftest.py): Pytest fixtures and mock service setup
+
+## Development Workflow
+
+**Context7 Integration**: Use Context7 (https://context7.com) to fetch latest best practices for our tech stack (Prefect 3.0+, uv, mypy, Ruff, pytest, Pydantic) when developing new features or fixing issues.
+
+**Documentation Cycle**: When making changes, update or create documentation in llm-docs/ as needed, then update entries in this llms.txt file to complete the development cycle and maintain accurate project overview.
 
 ## Optional
 

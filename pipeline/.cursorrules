@@ -1,0 +1,69 @@
+# Cursor Rules for Shepard Pipeline
+
+## Development Approach
+
+- **llms.txt is the preferred entry point** - Always reference llms.txt first to understand project structure and locate specific files
+- Use Context7 (https://context7.com) to fetch latest best practices for our tech stack: Prefect 3.0+, uv, mypy, Ruff, pytest, Pydantic
+- When developing new features or fixing issues, update or create documentation in llm-docs/ as needed
+- After documentation updates, update entries in llms.txt to complete the development cycle
+
+## Code Standards
+
+- Follow the systematic pre-commit workflow documented in llm-docs/code-quality.md:
+  1. `git add -A` (stage files first)
+  2. `uv run ruff format .` (format code)
+  3. `uv run ruff check --fix .` (fix linting)
+  4. `uv run mypy .` (type checking)
+  5. `uv run pre-commit run --all-files` (final validation)
+  6. `git commit -m "feat: description"` (conventional commits) or `uv run cz commit`
+
+- Use modern Python 3.12 syntax: `X | None` instead of `Optional[X]`, `dict`/`list` instead of `Dict`/`List`
+- Mark unused arguments with underscore prefix (`_text`) rather than removing them
+- Use `# noqa: ANN401` for legitimate `**kwargs: Any` usage
+- All functions require type annotations (except test functions which have mypy overrides)
+
+## Architecture Patterns
+
+### Prefect Flows and Tasks
+- Each processing step is an independent, retryable Prefect task
+- Flows orchestrate tasks and handle error recovery
+- Use `@flow` for main entry points, `@task` for atomic operations
+- Always include proper logging with `get_run_logger()`
+
+### Mock-First Development
+- All external APIs are mocked by default (`MOCK_EXTERNAL_APIS=true`)
+- Mock services in `services/mock_apis.py` provide realistic behavior
+- Real integrations planned for: Voxtral (transcription), OpenAI (summarization), Supabase (storage)
+
+### Type Safety with Pydantic
+- Use Pydantic models for all data validation and serialization
+- `PipelineInput` for job parameters, `PipelineResult` for outputs
+- Runtime configuration through validated settings in `config/settings.py`
+
+## Testing Requirements
+
+- Run tests with: `uv run pytest`
+- Integration tests in `tests/integration/` using Prefect test harness
+- Unit tests in `tests/unit/` for individual components
+- Mock all external services in tests using fixtures from `tests/conftest.py`
+
+## Development Environment
+
+- Use uv for dependency management: `uv sync`, `uv add package-name`
+- Docker Compose for local infrastructure: `docker compose up -d`
+- Prefect UI available at http://localhost:4200
+- Environment configuration through `.env` file (copy from `.env.example`)
+
+## Commit Standards
+
+- Use Conventional Commits format: `<type>[scope]: <description>`
+- Common types: feat, fix, docs, style, refactor, test, chore, ci, perf, build
+- Use `uv run cz commit` for interactive commit helper
+- Breaking changes: add `!` after type and include `BREAKING CHANGE:` footer
+
+## Documentation Updates
+
+When making changes:
+1. Update relevant documentation in llm-docs/ if architecture or processes change
+2. Update llms.txt entries for new files or changed functionality
+3. Ensure documentation reflects current implementation, not planned features

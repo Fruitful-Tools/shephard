@@ -11,6 +11,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Shepard Team", email = "team@shepard.ai"},
 ]
+requires-python = ">=3.12"
 dependencies = [
     "prefect>=3.0.0",
     "pydantic>=2.0.0",
@@ -37,6 +38,7 @@ dev = [
     "coverage[toml]>=7.3.0",
     "httpx>=0.25.0",
     "typos>=1.16.0",
+    "commitizen>=3.10.0",
 ]
 
 [project.scripts]
@@ -192,3 +194,12 @@ extend-exclude = [
 
 [tool.prefect]
 logging.level = "INFO"
+
+# Conventional Commits configuration
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"
+version_files = [
+    "pyproject.toml:version"
+]

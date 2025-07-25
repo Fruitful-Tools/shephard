@@ -20,7 +20,7 @@ This modern stack represents the **2024 state-of-the-art** for Python developmen
 
 Ruff is configured in `pyproject.toml` and serves multiple purposes:
 
-#### As a Linter (2024 Configuration)
+#### As a Linter
 Ruff consolidates multiple traditional tools with **gradual rule adoption**:
 
 **Essential Rules (Always Enabled)**:
@@ -46,7 +46,7 @@ Ruff consolidates multiple traditional tools with **gradual rule adoption**:
 - C4: Comprehension improvements
 - SIM: Safe simplifications
 
-#### As a Formatter (2024 Features)
+#### As a Formatter
 Ruff formats code with advanced features:
 - **88 character line length** (Black-compatible)
 - **Double quotes** for strings
@@ -173,11 +173,13 @@ Automated quality checks run before each commit.
 3. **Ruff formatting**: code formatting
 4. **typos**: spell checking
 5. **mypy**: type checking
+6. **commitizen**: conventional commit message validation
 
 #### Usage
 ```bash
 # Install hooks (one-time setup)
 uv run pre-commit install
+uv run pre-commit install --hook-type commit-msg
 
 # Run hooks manually on all files
 uv run pre-commit run --all-files
@@ -192,6 +194,57 @@ git commit --no-verify -m "urgent fix"
 uv run pre-commit autoupdate
 ```
 
+### Conventional Commits
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) specification for consistent commit messages.
+
+#### Format
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+#### Types
+- **feat**: New feature (minor version bump)
+- **fix**: Bug fix (patch version bump)
+- **docs**: Documentation changes
+- **style**: Code style changes (formatting, missing semicolons, etc.)
+- **refactor**: Code refactoring without changing functionality
+- **test**: Adding or updating tests
+- **chore**: Build process or auxiliary tool changes
+- **ci**: CI/CD pipeline changes
+- **perf**: Performance improvements
+- **build**: Build system or dependency changes
+
+#### Examples
+```bash
+# Simple feature
+git commit -m "feat: add user authentication"
+
+# Bug fix with scope
+git commit -m "fix(api): handle timeout errors properly"
+
+# Breaking change
+git commit -m "feat(auth)!: change password requirements
+
+BREAKING CHANGE: Minimum password length increased to 12 characters"
+
+# Documentation update
+git commit -m "docs: update installation guide with uv commands"
+```
+
+#### Tools
+```bash
+# Interactive commit with commitizen
+uv run cz commit
+
+# Check commit message format
+uv run cz check --commit-msg-file .git/COMMIT_EDITMSG
+```
+
 ## Development Workflow
 
 ### Before Starting Work
@@ -199,6 +252,7 @@ uv run pre-commit autoupdate
 # Ensure tools are installed
 uv sync
 uv run pre-commit install
+uv run pre-commit install --hook-type commit-msg
 ```
 
 ### During Development
@@ -232,6 +286,11 @@ uv run pre-commit run --all-files
 # 6. If pre-commit made changes, add them and run again
 git add -A
 uv run pre-commit run --all-files
+
+# 7. Commit with conventional commit format
+git commit -m "feat: add new feature description"
+# or use interactive commitizen
+uv run cz commit
 
 # Run tests to ensure functionality
 uv run pytest
