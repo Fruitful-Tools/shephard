@@ -1,14 +1,15 @@
-"""Audio processing tasks."""
+"""Audio processing tasks for the pipeline."""
 
 from pathlib import Path
 from uuid import uuid4
 
 from prefect import get_run_logger, task
 from pydantic import HttpUrl
+from pydub import AudioSegment
 
 from shepherd_pipeline.services.youtube.schema import AudioResult
 
-from ..models.pipeline import AudioChunk
+from ..services.llm_provider.schema import AudioChunk
 from ..services.youtube.mock import MockYouTubeService
 from ..services.youtube.service import YouTubeService
 from ..utils.artifact_manager import ArtifactManager

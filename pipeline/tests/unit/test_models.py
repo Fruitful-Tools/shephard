@@ -1,4 +1,4 @@
-"""Test Pydantic models."""
+"""Test pipeline data models."""
 
 from uuid import UUID
 
@@ -9,6 +9,8 @@ from shepherd_pipeline.models.pipeline import (
     JobStatus,
     PipelineInput,
     PipelineResult,
+)
+from shepherd_pipeline.services.llm_provider.schema import (
     SummaryResult,
     TranscriptionResult,
 )

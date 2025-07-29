@@ -1,12 +1,11 @@
-"""Mock LLM API services for local development."""
+"""Mock LLM service implementation for testing and development."""
 
 import random
 import time
 from typing import Any
 from uuid import uuid4
 
-from ...models.pipeline import CorrectionResult, SummaryResult, TranscriptionResult
-from .schema import BaseLLMService
+from .schema import BaseLLMService, CorrectionResult, SummaryResult, TranscriptionResult
 
 
 class MockAIService(BaseLLMService):

@@ -104,7 +104,7 @@ async def youtube_pipeline_flow(
         result.completed_at = datetime.now(UTC)
 
         # Calculate credits consumed (mock calculation)
-        audio_duration_hours = audio_metadata["duration"] / 3600
+        audio_duration_hours = audio_metadata.duration / 3600
         result.credits_consumed = max(1, int(audio_duration_hours))
 
         logger.info(f"Pipeline completed successfully for job {job_id}")

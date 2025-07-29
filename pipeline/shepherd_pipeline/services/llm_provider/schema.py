@@ -5,8 +5,46 @@ import logging
 from typing import Protocol
 
 from loguru import logger
+from pydantic import BaseModel
 
-from ...models.pipeline import CorrectionResult, SummaryResult, TranscriptionResult
+
+class AudioChunk(BaseModel):
+    """Audio chunk data."""
+
+    chunk_id: str
+    start_time: float
+    end_time: float
+    file_path: str
+    duration: float
+
+
+class TranscriptionResult(BaseModel):
+    """Transcription result for a single chunk."""
+
+    language: str
+    model: str
+    raw_text: str
+    failure_reason: str | None = None
+
+
+class CorrectionResult(BaseModel):
+    """Text correction/translation result."""
+
+    original_text: str
+    corrected_text: str
+    language: str
+    model: str
+    failure_reason: str | None = None
+
+
+class SummaryResult(BaseModel):
+    """Final summary result."""
+
+    summary: str
+    word_count: int
+    model: str
+    custom_instructions: str | None = None
+    failure_reason: str | None = None
 
 
 class LLMServiceProtocol(Protocol):

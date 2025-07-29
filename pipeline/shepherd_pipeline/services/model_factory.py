@@ -3,8 +3,7 @@
 from enum import Enum
 from typing import Any, Protocol
 
-from ..models.pipeline import CorrectionResult, SummaryResult, TranscriptionResult
-from .llm_provider import MistralService, MockAIService, OpenAIService
+from .llm_provider.schema import CorrectionResult, SummaryResult, TranscriptionResult
 
 
 class AIProvider(str, Enum):
@@ -157,32 +156,34 @@ class ModelFactory:
         ]
 
     @classmethod
-    def create_text_processor(cls, model: str) -> TextProcessorProtocol:
-        """Create a text processing service instance based on model."""
-        if model == "mock-model":
-            return MockAIService()
-        provider = cls.get_provider_for_model(model)
+    def _create_service_instance(cls, provider: AIProvider) -> Any:  # noqa: ANN401
+        """Create a service instance for the given provider."""
+        if provider == AIProvider.MOCK:
+            from .llm_provider.mock import MockAIService
 
-        if provider == AIProvider.OPENAI:
+            return MockAIService()
+        elif provider == AIProvider.OPENAI:
+            from .llm_provider.openai_service import OpenAIService
+
             return OpenAIService()
         elif provider == AIProvider.MISTRAL:
+            from .llm_provider.mistral_service import MistralService
+
             return MistralService()
         else:
-            raise ValueError(f"Unknown model: {model}")
+            raise ValueError(f"Unknown provider: {provider}")
+
+    @classmethod
+    def create_text_processor(cls, model: str) -> TextProcessorProtocol:
+        """Create a text processing service instance based on model."""
+        provider = cls.get_provider_for_model(model)
+        return cls._create_service_instance(provider)
 
     @classmethod
     def create_summarization_service(cls, model: str) -> TextProcessorProtocol:
         """Create a summarization service instance based on model."""
-        if model == "mock-model":
-            return MockAIService()
         provider = cls.get_provider_for_model(model)
-
-        if provider == AIProvider.OPENAI:
-            return OpenAIService()
-        elif provider == AIProvider.MISTRAL:
-            return MistralService()
-        else:
-            raise ValueError(f"Unknown model: {model}")
+        return cls._create_service_instance(provider)
 
     @classmethod
     def get_supported_models(cls) -> dict[AIProvider, list[str]]:
@@ -222,15 +223,5 @@ class ModelFactory:
     @classmethod
     def create_transcription_service(cls, model: str) -> TranscriptionProtocol:
         """Create a transcription service instance based on model."""
-        if model == "mock-model":
-            return MockAIService()
-
         provider = cls.get_provider_for_model(model)
-
-        if provider == AIProvider.OPENAI:
-            return OpenAIService()
-        elif provider == AIProvider.MISTRAL:
-            # Use unified MistralService for all Mistral models including Voxtral
-            return MistralService()
-        else:
-            raise ValueError(f"Unknown model: {model}")
+        return cls._create_service_instance(provider)

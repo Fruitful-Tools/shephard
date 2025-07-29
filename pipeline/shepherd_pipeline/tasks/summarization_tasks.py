@@ -1,8 +1,8 @@
-"""Text summarization tasks."""
+"""Summarization-related Prefect tasks."""
 
 from prefect import task
 
-from ..models.pipeline import SummaryResult
+from ..services.llm_provider.schema import SummaryResult
 from ..services.model_factory import ModelFactory
 
 

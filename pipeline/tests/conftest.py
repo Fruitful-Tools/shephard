@@ -1,7 +1,8 @@
-"""Pytest configuration and fixtures."""
+"""Test configuration and fixtures."""
 
 from collections.abc import Generator
 from pathlib import Path
+import sys
 import tempfile
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -11,11 +12,17 @@ from pydantic import HttpUrl
 import pytest
 
 from shepherd_pipeline.models.pipeline import (
-    CorrectionResult,
     PipelineInput,
+)
+from shepherd_pipeline.services.llm_provider.schema import (
+    CorrectionResult,
     SummaryResult,
     TranscriptionResult,
 )
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 
 @pytest.fixture(autouse=True, scope="session")

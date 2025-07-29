@@ -1,8 +1,12 @@
-"""Transcription and text correction tasks."""
+"""Transcription-related Prefect tasks."""
 
 from prefect import get_run_logger, task
 
-from ..models.pipeline import AudioChunk, CorrectionResult, TranscriptionResult
+from ..services.llm_provider.schema import (
+    AudioChunk,
+    CorrectionResult,
+    TranscriptionResult,
+)
 from ..services.model_factory import ModelFactory
 from ..services.translation_service import ChineseTranslationService
 

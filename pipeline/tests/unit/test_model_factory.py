@@ -1,10 +1,8 @@
 """Test model factory."""
 
-from shepherd_pipeline.services.llm_provider import (
-    MistralService,
-    MockAIService,
-    OpenAIService,
-)
+from shepherd_pipeline.services.llm_provider.mistral_service import MistralService
+from shepherd_pipeline.services.llm_provider.mock import MockAIService
+from shepherd_pipeline.services.llm_provider.openai_service import OpenAIService
 from shepherd_pipeline.services.model_factory import AIProvider, ModelFactory, TaskType
 
 

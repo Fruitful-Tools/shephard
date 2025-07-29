@@ -284,7 +284,6 @@ def youtube(
         display_result(result)
 
         # Save files if requested
-        console.print(result.corrections)
         if export_transcript or export_summary:
             console.print("\n📁 Exporting results...")
             save_transcript_and_summary(result, export_transcript, export_summary)
@@ -379,22 +378,6 @@ def display_result(result: PipelineResult) -> None:
                 border_style="green",
             )
         )
-
-    # Display sample transcriptions if available
-    if result.transcriptions and len(result.transcriptions) > 0:
-        console.print("\n[blue]Sample Transcriptions:[/blue]")
-        for i, trans in enumerate(result.transcriptions[:2]):  # Show first 2
-            sample_text = (
-                trans.raw_text[:200] + "..."
-                if len(trans.raw_text) > 200
-                else trans.raw_text
-            )
-            console.print(f"[dim]Chunk {i + 1}:[/dim] {sample_text}")
-
-        if len(result.transcriptions) > 2:
-            console.print(
-                f"[dim]... and {len(result.transcriptions) - 2} more chunks[/dim]"
-            )
 
 
 def main() -> None:

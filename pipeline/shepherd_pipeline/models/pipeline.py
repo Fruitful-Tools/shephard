@@ -6,6 +6,13 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, HttpUrl
 
+from ..services.llm_provider.schema import (
+    AudioChunk,
+    CorrectionResult,
+    SummaryResult,
+    TranscriptionResult,
+)
+
 
 class JobStatus(str, Enum):
     """Pipeline job status."""
@@ -15,53 +22,6 @@ class JobStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-
-
-class EntryPointType(str, Enum):
-    """Pipeline entry point types."""
-
-    YOUTUBE = "youtube"
-    AUDIO_FILE = "audio_file"
-    TEXT = "text"
-
-
-class AudioChunk(BaseModel):
-    """Audio chunk data."""
-
-    chunk_id: str
-    start_time: float
-    end_time: float
-    file_path: str
-    duration: float
-
-
-class TranscriptionResult(BaseModel):
-    """Transcription result for a single chunk."""
-
-    language: str
-    model: str
-    raw_text: str
-    failure_reason: str | None = None
-
-
-class CorrectionResult(BaseModel):
-    """Text correction/translation result."""
-
-    original_text: str
-    corrected_text: str
-    language: str
-    model: str
-    failure_reason: str | None = None
-
-
-class SummaryResult(BaseModel):
-    """Final summary result."""
-
-    summary: str
-    word_count: int
-    model: str
-    custom_instructions: str | None = None
-    failure_reason: str | None = None
 
 
 class PipelineInput(BaseModel):
@@ -139,13 +99,3 @@ class PipelineResult(BaseModel):
         if self.processing_duration:
             return self.processing_duration / 60.0
         return None
-
-
-class JobSubmissionResponse(BaseModel):
-    """Response for job submission."""
-
-    job_id: UUID
-    status: JobStatus
-    message: str
-    estimated_credits: int
-    estimated_duration_minutes: float | None = None
