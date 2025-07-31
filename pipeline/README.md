@@ -92,3 +92,109 @@ shepherd_pipeline/
 - **[Code Quality Guide](llm-docs/code-quality.md)** - Development tools and workflows
 
 For complete development documentation, see [llm-docs/](llm-docs/) directory or refer to [llms.txt](llms.txt) for structured project overview.
+
+## Context Engineering
+
+This repository implements context engineering prompts by [suggestion from this repo](https://github.com/coleam00/context-engineering-intro).
+
+### What is Context Engineering?
+
+Context Engineering represents a paradigm shift from traditional prompt engineering:
+
+### Prompt Engineering vs Context Engineering
+
+**Prompt Engineering:**
+- Focuses on clever wording and specific phrasing
+- Limited to how you phrase a task
+- Like giving someone a sticky note
+
+**Context Engineering:**
+- A complete system for providing comprehensive context
+- Includes documentation, examples, rules, patterns, and validation
+- Like writing a full screenplay with all the details
+
+### Why Context Engineering Matters
+
+1. **Reduces AI Failures**: Most agent failures aren't model failures - they're context failures
+2. **Ensures Consistency**: AI follows your project patterns and conventions
+3. **Enables Complex Features**: AI can handle multi-step implementations with proper context
+4. **Self-Correcting**: Validation loops allow AI to fix its own mistakes
+
+### Shepherd Pipeline Context Engineering Structure
+
+```
+shepherd_pipeline/
+├── CLAUDE.md                    # AI agent guidance and development workflows
+├── llms.txt                     # Primary project overview and entry point
+└── llm-docs/
+    ├── PRPs/
+    │   ├── templates/
+    │   │   ├── PRP_base.md      # Comprehensive feature implementation template
+    │   │   └── PRP_example.md   # Example PRP with Shepherd Pipeline context
+    │   └── [generated_prps]/    # Project-specific PRPs for complex features
+    ├── python-env.md            # Environment setup and tooling
+    ├── local-dev.md             # Development infrastructure
+    ├── project-spec.md          # Architectural blueprint
+    ├── model-configuration.md   # AI service integration patterns
+    ├── chinese-translation.md   # Specialized language processing
+    └── artifact-system.md       # Caching and deduplication patterns
+```
+
+### Key Context Engineering Components
+
+1. **CLAUDE.md**: Provides AI agents with essential commands, workflows, and project-specific patterns
+2. **llms.txt**: Serves as the primary entry point with comprehensive project overview
+3. **PRP Templates**: Problem-Requirements-Plan templates for complex feature implementation
+4. **Specialized Documentation**: Domain-specific guides for Chinese processing, AI integration, etc.
+
+This context engineering approach enables AI agents to understand the Shepherd Pipeline's architecture, follow established patterns, and implement features with minimal guidance while maintaining code quality and consistency.
+
+### Step-by-Step Guide
+
+#### 1. Create Your Initial Feature Request
+
+create UCS-XXXXX.md initial prp file, refer to `prp_example.md` as an example format, or simply copy from JIRA if ticket is well written.
+
+#### 2. Generate the PRP
+
+PRPs (Product Requirements Prompts) are comprehensive implementation blueprints that include:
+
+- Complete context and documentation
+- Implementation steps with validation
+- Error handling patterns
+- Test requirements
+
+They are similar to PRDs (Product Requirements Documents) but are crafted more specifically to instruct an AI coding assistant.
+
+Run in Claude Code:
+```bash
+/generate-prp feat-XXXXX.md
+```
+
+**Note:** The slash commands are custom commands defined in `.claude/commands/`. You can view their implementation:
+- `.claude/commands/generate-prp.md` - See how it researches and creates PRPs
+- `.claude/commands/execute-prp.md` - See how it implements features from PRPs
+
+The `$ARGUMENTS` variable in these commands receives whatever you pass after the command name (e.g., `INITIAL.md` or `PRPs/your-feature.md`).
+
+This command will:
+
+- Read your feature request
+- Research the codebase for patterns
+- Search for relevant documentation
+- Create a comprehensive PRP in `llm-docs/PRPs/your-feature-name.md`
+
+#### 3. Execute the PRP
+
+Once generated, execute the PRP to implement your feature:
+
+```bash
+/execute-prp llm-docs/PRPs/your-feature-name.md
+```
+
+The AI coding assistant will:
+1. Read all context from the PRP
+2. Create a detailed implementation plan
+3. Execute each step with validation
+4. Run tests and fix any issues
+5. Ensure all success criteria are met
